@@ -13,6 +13,8 @@ internal class MinimaxBot : IChessBot
 
     private Move BestMove(Board board, int maxDepth = -1)
     {
+        double alpha = double.NegativeInfinity, beta = double.PositiveInfinity;
+
         Comparison<double> scoreComparison = board.GetScoreComparison();
         double bestScore = board.IsWhiteToMove ? double.NegativeInfinity : double.PositiveInfinity;
 
@@ -22,9 +24,16 @@ internal class MinimaxBot : IChessBot
         foreach (Move move in moves)
         {
             board.MakeMove(move);
-            double score = MiniMax(board, maxDepth);
-            if (scoreComparison(score, bestScore) > 0) (bestScore, bestMove) = (score, move);
+            double score = MiniMax(board, alpha, beta, maxDepth);
             board.UndoMove(move);
+
+            if (scoreComparison(score, bestScore) > 0)
+            {
+                (bestScore, bestMove) = (score, move);
+
+                if (board.IsWhiteToMove) alpha = Math.Max(alpha, bestScore);
+                else beta = Math.Min(beta, bestScore);
+            }
         }
 
         return bestMove;
@@ -32,11 +41,14 @@ internal class MinimaxBot : IChessBot
 
     /// <summary>
     /// Performs the minimax algorithm up to a maximum search depth.
+    /// Based on https://en.wikipedia.org/wiki/Minimax and https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning.
     /// </summary>
     /// <param name="board">Current board state.</param>
+    /// <param name="alpha">Lower-bound for alpha-beta pruning.</param>
+    /// <param name="alpha">Upper-bound for alpha-beta pruning.</param>
     /// <param name="maxDepth">Maximum search depth. Values less than 0 are treated as infinity.</param>
     /// <returns>Minimax value of board state.</returns>
-    private double MiniMax(Board board, int maxDepth)
+    private double MiniMax(Board board, double alpha, double beta, int maxDepth)
     {
         if (maxDepth == 0 || board.IsGameOver()) return board.GetHeuristic();
         
@@ -50,9 +62,18 @@ internal class MinimaxBot : IChessBot
         foreach (Move move in moves)
         {
             board.MakeMove(move);
-            double score = MiniMax(board, maxDepth);
-            if (scoreComparison(score, bestScore) > 0) bestScore = score;
+            double score = MiniMax(board, alpha, beta, maxDepth);
             board.UndoMove(move);
+
+            if (scoreComparison(score, bestScore) > 0)
+            {
+                bestScore = score;
+
+                if (board.IsWhiteToMove) alpha = Math.Max(alpha, bestScore);
+                else beta = Math.Min(beta, bestScore);
+
+                if (alpha > beta) break;
+            }
         }
 
         return bestScore;
@@ -83,7 +104,7 @@ internal static class BoardExtensions
     /// <returns>Heuristic score for board.</returns>
     public static double GetHeuristic(this Board board)
     {
-        if (board.IsInCheckmate()) return board.IsWhiteToMove ? -100 : 100;
+        if (board.IsInCheckmate()) return board.IsWhiteToMove ? -1000 : 1000;
         if (board.IsDraw()) return 0;
 
         PieceList[] pieces = board.GetAllPieceLists();
