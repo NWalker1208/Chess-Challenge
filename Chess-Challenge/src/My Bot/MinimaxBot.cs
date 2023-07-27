@@ -8,23 +8,24 @@ internal class MinimaxBot : IChessBot
     public Move Think(Board board, Timer timer)
     {
         Move[] moves = board.GetLegalMoves();
-        return BestMove(board, maxDepth: 3);
+        return BestMove(board, maxDepth: 5, maxBreadth: 12);
     }
 
-    private Move BestMove(Board board, int maxDepth = -1)
+    private Move BestMove(Board board, int maxDepth = -1, int maxBreadth = 0)
     {
         double alpha = double.NegativeInfinity, beta = double.PositiveInfinity;
 
         Comparison<double> scoreComparison = board.GetScoreComparison();
         double bestScore = board.IsWhiteToMove ? double.NegativeInfinity : double.PositiveInfinity;
 
-        Move[] moves = board.GetSortedMoves();
-        Move bestMove = moves[0];
+        IEnumerable<Move> moves = board.GetSortedMoves();
+        if (maxBreadth >= 1) moves = moves.Take(maxBreadth);
+        Move bestMove = moves.First();
 
         foreach (Move move in moves)
         {
             board.MakeMove(move);
-            double score = MiniMax(board, alpha, beta, maxDepth);
+            double score = MiniMax(board, alpha, beta, maxDepth, maxBreadth);
             board.UndoMove(move);
 
             if (scoreComparison(score, bestScore) > 0)
@@ -47,8 +48,9 @@ internal class MinimaxBot : IChessBot
     /// <param name="alpha">Lower-bound for alpha-beta pruning.</param>
     /// <param name="alpha">Upper-bound for alpha-beta pruning.</param>
     /// <param name="maxDepth">Maximum search depth. Values less than 0 are treated as infinity.</param>
+    /// <param name="maxBreadth">Maximum search breadth (number of moves considered per turn). Values less than 1 are treated as infinity.</param>
     /// <returns>Minimax value of board state.</returns>
-    private double MiniMax(Board board, double alpha, double beta, int maxDepth)
+    private double MiniMax(Board board, double alpha, double beta, int maxDepth, int maxBreadth)
     {
         if (maxDepth == 0 || board.IsGameOver()) return board.GetHeuristic();
         
@@ -57,12 +59,13 @@ internal class MinimaxBot : IChessBot
         Comparison<double> scoreComparison = board.GetScoreComparison();
         double bestScore = board.IsWhiteToMove ? double.NegativeInfinity : double.PositiveInfinity;
 
-        Move[] moves = board.GetSortedMoves();
+        IEnumerable<Move> moves = board.GetSortedMoves();
+        if (maxBreadth >= 1) moves = moves.Take(maxBreadth);
 
         foreach (Move move in moves)
         {
             board.MakeMove(move);
-            double score = MiniMax(board, alpha, beta, maxDepth);
+            double score = MiniMax(board, alpha, beta, maxDepth, maxBreadth);
             board.UndoMove(move);
 
             if (scoreComparison(score, bestScore) > 0)
