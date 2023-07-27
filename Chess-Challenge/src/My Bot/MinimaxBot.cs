@@ -67,7 +67,7 @@ internal class MinimaxBot : IChessBot
 
             if (scoreComparison(score, bestScore) > 0)
             {
-                bestScore = score;
+                (bestScore, bestMove) = (score, move);
 
                 if (board.IsWhiteToMove) alpha = Math.Max(alpha, bestScore);
                 else beta = Math.Min(beta, bestScore);
