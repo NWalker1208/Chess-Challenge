@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-internal class TrainingDataCollector
+public class TrainingDataCollector
 {
     const int MAX_DEPTH = 5;
     const int MAX_BREADTH = 12;
