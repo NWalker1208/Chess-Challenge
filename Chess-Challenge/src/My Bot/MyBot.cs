@@ -8,11 +8,10 @@ public class MyBot : IChessBot
 {
     private const int NUM_INPUTS = 832;
     private const int NUM_PARAMS = 16 * NUM_INPUTS + 16 + 512 + 32 + 512 + 16 + 16 + 1;
+    // TODO: Replace with actual pre-trained parameters
     private static readonly float[] PRETRAINED_PARAMS = Enumerable.Range(0, NUM_PARAMS).Select(_ => (float)(Random.Shared.NextDouble() * 2 - 1)).ToArray();
 
     private NeuralNet neuralNet;
-
-    //private MinimaxBot tempBrain = new();
 
     public MyBot()
     {
@@ -26,7 +25,6 @@ public class MyBot : IChessBot
         Move[] moves = board.GetLegalMoves();
         float[] evals = moves.Select(m => EvalMove(board, m)).ToArray();
         return moves[Array.IndexOf(evals, board.IsWhiteToMove ? evals.Max() : evals.Min())];
-        //return tempBrain.Think(board, timer);
     }
 
     private float EvalMove(Board board, Move move)
