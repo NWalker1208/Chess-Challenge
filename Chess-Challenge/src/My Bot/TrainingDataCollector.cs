@@ -24,9 +24,10 @@ public class TrainingDataCollector
         
         Stopwatch sw = new();
         sw.Restart();
-        samples.ToArray();
+        (float[], float)[] samplesArray = samples.ToArray();
         sw.Stop();
-        Console.WriteLine($"Time passed: {sw.Elapsed}");
+        Console.WriteLine($"Total time elapsed: {sw.Elapsed}");
+        Console.WriteLine($"Time per sample: {sw.Elapsed.TotalSeconds / samplesArray.Length} seconds");
         // TODO: Save inputs and scores to a numpy or pandas compatible file
     }
 }
