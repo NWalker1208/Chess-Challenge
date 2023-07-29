@@ -30,7 +30,7 @@ public class MyBot : IChessBot
     private float EvalMove(Board board, Move move)
     {
         board.MakeMove(move);
-        float[] inputs = BoardToFenChars(board).Select(FenCharToOneHotIndex).SelectMany(OneHotIndexToInputs).ToArray();
+        float[] inputs = BoardToFenChars(board).Select(FenCharToClassIndex).SelectMany(ClassIndexToOneHot).ToArray();
         float eval = neuralNet.GetOutputs(inputs)[0];
         board.UndoMove(move);
         return eval;
@@ -40,7 +40,7 @@ public class MyBot : IChessBot
         => board.GetFenString().Split(' ')[0].Split('/').SelectMany(rank => rank)
             .SelectMany(c => char.IsNumber(c) ? Enumerable.Repeat('_', int.Parse(c.ToString())) : Enumerable.Repeat(c, 1));
 
-    internal static int FenCharToOneHotIndex(char c)
+    internal static int FenCharToClassIndex(char c)
         => char.ToLower(c) switch
         {
             '_' => 0,
@@ -53,7 +53,7 @@ public class MyBot : IChessBot
             _ => throw new ArgumentException($"Invalid FEN character: {c}")
         } + (char.IsUpper(c) ? 6 : 0);
 
-    internal static IEnumerable<float> OneHotIndexToInputs(int i)
+    internal static IEnumerable<float> ClassIndexToOneHot(int i)
         => Enumerable.Repeat(0.0f, i).Append(1.0f).Concat(Enumerable.Repeat(0.0f, 12 - i));
 
     private class NeuralNet

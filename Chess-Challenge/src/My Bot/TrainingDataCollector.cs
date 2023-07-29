@@ -19,7 +19,7 @@ public class TrainingDataCollector
         string[] fenStrings = FileHelper.ReadResourceFile("Fens.txt").Split('\n').Where(fen => fen.Length > 0).ToArray();
         Board[] boards = fenStrings.Take(sampleSize).Select(Board.CreateBoardFromFEN).ToArray();
         
-        ParallelQuery<int[]> inputs = boards.AsParallel().Select(board => MyBot.BoardToFenChars(board).Select(MyBot.FenCharToOneHotIndex).ToArray());
+        ParallelQuery<int[]> inputs = boards.AsParallel().Select(board => MyBot.BoardToFenChars(board).Select(MyBot.FenCharToClassIndex).ToArray());
         ParallelQuery<float> scores = boards.AsParallel().Select(board => (float)minimaxBot.MiniMax(board, double.NegativeInfinity, double.PositiveInfinity, MAX_DEPTH, MAX_BREADTH, out _));
         IEnumerable<(int[] Inputs, float Score)> samples = inputs.Zip(scores, (i, s) => (i, s));
 
