@@ -8,8 +8,6 @@ public class MyBot : IChessBot
 {
     private const int NUM_INPUTS = 832;
     private const int NUM_PARAMS = 16 * NUM_INPUTS + 16 + 512 + 32 + 512 + 16 + 16 + 1;
-    // TODO: Replace with actual pre-trained parameters
-    private static readonly float[] PRETRAINED_PARAMS = Enumerable.Range(0, NUM_PARAMS).Select(_ => (float)(Random.Shared.NextDouble() * 2 - 1)).ToArray();
 
     private NeuralNet neuralNet;
 
@@ -17,7 +15,11 @@ public class MyBot : IChessBot
     {
         neuralNet = new(new float[][,] { new float[16, NUM_INPUTS], new float[32, 16], new float[16, 32], new float[1, 16] },
                         new float[][] { new float[16], new float[32], new float[16], new float[1] });
-        neuralNet.LoadParameters(PRETRAINED_PARAMS);
+
+        float[] pretrainedParameters = new float[NUM_PARAMS];
+        //byte[] parametersAsBytes = Convert.FromBase64String(ENCODED_PRETRAINED_PARAMS);
+        //Buffer.BlockCopy(parametersAsBytes, 0, pretrainedParameters, 0, NUM_PARAMS * 4);
+        neuralNet.LoadParameters(pretrainedParameters);
     }
 
     public Move Think(Board board, Timer timer)
@@ -105,7 +107,10 @@ public class MyBot : IChessBot
                     outputs[o] += inputs[i] * weights[o, i];
                 }
                 outputs[o] += biases[o];
+                if (o < outputs.Length - 1)
+                {
                 outputs[o] = Math.Max(0, outputs[o]); // ReLU
+            }
             }
             return outputs;
         }
