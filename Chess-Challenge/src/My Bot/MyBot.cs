@@ -30,31 +30,31 @@ public class MyBot : IChessBot
     private float EvalMove(Board board, Move move)
     {
         board.MakeMove(move);
-        float eval = neuralNet.GetOutputs(BoardToInputs(board))[0];
+        float[] inputs = BoardToFenChars(board).Select(FenCharToOneHotIndex).SelectMany(OneHotIndexToInputs).ToArray();
+        float eval = neuralNet.GetOutputs(inputs)[0];
         board.UndoMove(move);
         return eval;
     }
 
-    internal static float[] BoardToInputs(Board board)
-      => board.GetFenString().Split(' ')[0].Split('/')
-          .SelectMany(r => r)
-          .SelectMany(c => char.IsNumber(c) ? Enumerable.Repeat('_', int.Parse(c.ToString())) : Enumerable.Repeat(c, 1))
-          .Select(FenCharToOneHot)
-          .SelectMany(i => Enumerable.Repeat(0.0f, i).Append(1.0f).Concat(Enumerable.Repeat(0.0f, 12 - i)))
-          .ToArray();
+    internal static IEnumerable<char> BoardToFenChars(Board board)
+        => board.GetFenString().Split(' ')[0].Split('/').SelectMany(rank => rank)
+            .SelectMany(c => char.IsNumber(c) ? Enumerable.Repeat('_', int.Parse(c.ToString())) : Enumerable.Repeat(c, 1));
 
-    private static int FenCharToOneHot(char c)
-      => char.ToLower(c) switch
-      {
-          '_' => 0,
-          'p' => 1,
-          'n' => 2,
-          'b' => 3,
-          'r' => 4,
-          'q' => 5,
-          'k' => 6,
-          _ => throw new ArgumentException($"Invalid FEN character: {c}")
-      } + (char.IsUpper(c) ? 6 : 0);
+    internal static int FenCharToOneHotIndex(char c)
+        => char.ToLower(c) switch
+        {
+            '_' => 0,
+            'p' => 1,
+            'n' => 2,
+            'b' => 3,
+            'r' => 4,
+            'q' => 5,
+            'k' => 6,
+            _ => throw new ArgumentException($"Invalid FEN character: {c}")
+        } + (char.IsUpper(c) ? 6 : 0);
+
+    internal static IEnumerable<float> OneHotIndexToInputs(int i)
+        => Enumerable.Repeat(0.0f, i).Append(1.0f).Concat(Enumerable.Repeat(0.0f, 12 - i));
 
     private class NeuralNet
     {

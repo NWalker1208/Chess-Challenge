@@ -18,13 +18,13 @@ public class TrainingDataCollector
         string[] fenStrings = FileHelper.ReadResourceFile("Fens.txt").Split('\n').Where(fen => fen.Length > 0).ToArray();
         Board[] boards = fenStrings.Take(sampleSize).Select(Board.CreateBoardFromFEN).ToArray();
         
-        ParallelQuery<float[]> inputs = boards.AsParallel().Select(MyBot.BoardToInputs);
+        ParallelQuery<int[]> inputs = boards.AsParallel().Select(board => MyBot.BoardToFenChars(board).Select(MyBot.FenCharToOneHotIndex).ToArray());
         ParallelQuery<float> scores = boards.AsParallel().Select(board => (float)minimaxBot.MiniMax(board, double.NegativeInfinity, double.PositiveInfinity, MAX_DEPTH, MAX_BREADTH, out _));
-        IEnumerable<(float[], float)> samples = inputs.Zip(scores, (i, s) => (i, s));
+        IEnumerable<(int[], float)> samples = inputs.Zip(scores, (i, s) => (i, s));
         
         Stopwatch sw = new();
         sw.Restart();
-        (float[], float)[] samplesArray = samples.ToArray();
+        (int[], float)[] samplesArray = samples.ToArray();
         sw.Stop();
         Console.WriteLine($"Total time elapsed: {sw.Elapsed}");
         Console.WriteLine($"Time per sample: {sw.Elapsed.TotalSeconds / samplesArray.Length} seconds");
