@@ -3,6 +3,7 @@ using ChessChallenge.Application;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,14 +21,19 @@ public class TrainingDataCollector
         
         ParallelQuery<int[]> inputs = boards.AsParallel().Select(board => MyBot.BoardToFenChars(board).Select(MyBot.FenCharToOneHotIndex).ToArray());
         ParallelQuery<float> scores = boards.AsParallel().Select(board => (float)minimaxBot.MiniMax(board, double.NegativeInfinity, double.PositiveInfinity, MAX_DEPTH, MAX_BREADTH, out _));
-        IEnumerable<(int[], float)> samples = inputs.Zip(scores, (i, s) => (i, s));
-        
+        IEnumerable<(int[] Inputs, float Score)> samples = inputs.Zip(scores, (i, s) => (i, s));
+
+        int sampleCount = 0;
         Stopwatch sw = new();
         sw.Restart();
-        (int[], float)[] samplesArray = samples.ToArray();
+        File.WriteAllLines("samples.csv", samples.Select(sample =>
+        {
+            sampleCount++;
+            return $"{string.Join(',', sample.Inputs)},{sample.Score:e9}";
+        }));
         sw.Stop();
         Console.WriteLine($"Total time elapsed: {sw.Elapsed}");
-        Console.WriteLine($"Time per sample: {sw.Elapsed.TotalSeconds / samplesArray.Length} seconds");
-        // TODO: Save inputs and scores to a numpy or pandas compatible file
+        Console.WriteLine($"Number of samples: {sampleCount}");
+        Console.WriteLine($"Time per sample: {sw.Elapsed.TotalSeconds / sampleCount} seconds");
     }
 }
