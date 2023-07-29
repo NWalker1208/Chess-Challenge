@@ -9,7 +9,7 @@ public class MyBot : IChessBot
     private const int NUM_INPUTS = 832;
     private const int NUM_PARAMS = 16 * NUM_INPUTS + 16 + 512 + 32 + 512 + 16 + 16 + 1;
 
-    private NeuralNet neuralNet;
+    private FeedForwardNeuralNet neuralNet;
 
     public MyBot()
     {
@@ -58,12 +58,16 @@ public class MyBot : IChessBot
     internal static IEnumerable<float> ClassIndexToOneHot(int i)
         => Enumerable.Repeat(0.0f, i).Append(1.0f).Concat(Enumerable.Repeat(0.0f, 12 - i));
 
-    private class NeuralNet
+    /// <summary>
+    /// Neural network using a simple feed-forward neural net.
+    /// Note: This was my first attempt, but it requires too many parameters to use.
+    /// </summary>
+    private class FeedForwardNeuralNet
     {
         private readonly float[][,] weights;
         private readonly float[][] biases;
 
-        public NeuralNet(float[][,] weights, float[][] biases)
+        public FeedForwardNeuralNet(float[][,] weights, float[][] biases)
         {
             this.weights = weights;
             this.biases = biases;
